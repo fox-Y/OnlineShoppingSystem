@@ -1,8 +1,8 @@
-🛒 Online Shopping Backend (Spring Boot + JPA + JWT)
+# 🛒 Online Shopping Backend (Spring Boot + JPA + JWT)
 
 A full-stack backend for an e-commerce application built using Spring Boot, JPA (EntityManager), Spring Security, and JWT authentication. It supports user and admin roles, product browsing, order placement, wishlist management, and sales statistics.
 
-✅ Features
+# ✅ Features
 ✔ Built using JPA + EntityManager instead of Hibernate repositories (as required)
 ✔ Implements JWT-based authentication & authorization with Spring Security
 ✔ Database follows normalized ER Diagram
