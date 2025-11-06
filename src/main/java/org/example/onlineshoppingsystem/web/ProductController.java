@@ -11,6 +11,8 @@ import org.example.onlineshoppingsystem.domain.enums.Role;
 import org.example.onlineshoppingsystem.service.ProductService;
 import org.example.onlineshoppingsystem.service.StatsService;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +22,7 @@ import static org.example.onlineshoppingsystem.web.WebUtil.currentUserId;
 
 @RestController
 @RequestMapping("/products")
+@EnableMethodSecurity
 public class ProductController {
 
     private final ProductService productService;
@@ -46,21 +49,25 @@ public class ProductController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public IdRes create(@RequestBody ProductDetailRes.AdminUpsert req) {
         return new IdRes(productService.create(req));
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void update(@PathVariable Long id, @RequestBody ProductDetailRes.AdminUpsert req) {
         productService.update(id, req);
     }
 
     @GetMapping("/popular/{n}")
+    @PreAuthorize("hasRole('ADMIN')")
     public List<PopularRes> popular(@PathVariable int n) {
         return statsService.popularTopN(n);
     }
 
     @GetMapping("/profit/{n}")
+    @PreAuthorize("hasRole('ADMIN')")
     public List<ProfitRes> profit(@PathVariable int n) {
         return statsService.mostProfitableTopN(n);
     }
@@ -76,6 +83,7 @@ public class ProductController {
     }
 
     @GetMapping(value = "/all", params = "admin=true")
+    @PreAuthorize("hasRole('ADMIN')")
     public Page<ProductAdminView> allAdmin(@RequestParam(defaultValue = "0") int page,
                                            @RequestParam(defaultValue = "20") int size) {
         return productService.catalogForAdmin(page, size);

@@ -26,4 +26,10 @@ public class AuthController {
     public TokenRes login(@RequestBody LoginReq req) {
         return new TokenRes(auth.login(req));
     }
+
+    @PostMapping("/admin/signup")
+    public ResponseEntity<Void> signupAdmin(@Valid @RequestBody SignupReq req) {
+        auth.signupAdmin(req);
+        return ResponseEntity.ok().build();
+    }
 }

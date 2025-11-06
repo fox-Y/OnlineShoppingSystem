@@ -35,6 +35,18 @@ public class AuthService {
         userRepo.save(u);
     }
 
+    @Transactional
+    public void signupAdmin(SignupReq req) {
+        if (userRepo.existsByUsername(req.getUsername())) throw new IllegalArgumentException("Username exists");
+        if (userRepo.existsByEmail(req.getEmail()))       throw new IllegalArgumentException("Email exists");
+        User u = new User();
+        u.setUsername(req.getUsername());
+        u.setEmail(req.getEmail());
+        u.setPassword(encoder.encode(req.getPassword()));
+        u.setRole(Role.ADMIN);
+        userRepo.save(u);
+    }
+
     public String login(LoginReq req) {
         var u = userRepo.findByUsername(req.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("Incorrect credentials"));

@@ -39,7 +39,6 @@ public class OrderService {
         order.setOrderStatus(OrderStatus.PROCESSING);
         order.setDatePlaced(Instant.now());
 
-        // 逐条扣库存（悲观锁），并固化历史价格
         req.getOrder().forEach(it -> {
             productRepo.decrementStockWithLock(it.getProductId(), it.getQuantity());
             var product = productRepo.findById(it.getProductId()).orElseThrow(() -> new IllegalArgumentException("Product not found"));
@@ -75,7 +74,7 @@ public class OrderService {
         if (o.getOrderStatus() == OrderStatus.COMPLETED) throw new IllegalStateException("Completed cannot cancel");
         if (o.getOrderStatus() == OrderStatus.CANCELED) return;
         o.setOrderStatus(OrderStatus.CANCELED);
-        // 回补库存：传负数或写单独方法
+
         o.getItems().forEach(oi ->
                 productRepo.decrementStockWithLock(oi.getProduct().getProductId(), -oi.getQuantity())
         );
@@ -86,5 +85,12 @@ public class OrderService {
         var o = orderRepo.lockById(orderId);
         if (o.getOrderStatus() == OrderStatus.CANCELED) throw new IllegalStateException("Canceled cannot complete");
         o.setOrderStatus(OrderStatus.COMPLETED);
+    }
+
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<Order> allOrdersAdmin(int page, int size) {
+        var p = org.springframework.data.domain.PageRequest.of(page, size,
+                org.springframework.data.domain.Sort.by("datePlaced").descending());
+        return orderRepo.findAll(p); // should return everything
     }
 }

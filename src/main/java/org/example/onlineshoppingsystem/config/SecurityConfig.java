@@ -34,6 +34,7 @@ public class SecurityConfig {
                                 "/swagger-resources/**", "/webjars/**").permitAll()
                         // Auth endpoints — method-aware matchers, no AntPathRequestMatcher needed
                         .requestMatchers(HttpMethod.POST, "/signup", "/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/admin/signup").permitAll()
                         // Public catalog
                         .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
                         // Everything else requires JWT
