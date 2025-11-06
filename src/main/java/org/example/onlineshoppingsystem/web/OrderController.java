@@ -1,5 +1,6 @@
 package org.example.onlineshoppingsystem.web;
 
+import jakarta.validation.Valid;
 import org.example.onlineshoppingsystem.common.dto.IdRes;
 import org.example.onlineshoppingsystem.common.dto.OrderReq;
 import org.example.onlineshoppingsystem.domain.entity.Order;
@@ -21,7 +22,7 @@ public class OrderController {
 
     // POST /orders -- place order
     @PostMapping
-    public IdRes place(@RequestBody OrderReq req, Authentication auth) {
+    public IdRes place(@RequestBody @Valid OrderReq req, Authentication auth) {
         return orderService.place(currentUserId(auth), req);
     }
 
@@ -48,6 +49,7 @@ public class OrderController {
 
     // PATCH /orders/{id}/complete
     @PatchMapping("/{id}/complete")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> complete(@PathVariable Long id) {
         orderService.complete(id);
         return ResponseEntity.ok().build();

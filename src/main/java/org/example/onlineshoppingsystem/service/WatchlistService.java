@@ -28,14 +28,13 @@ public class WatchlistService {
 
     @Transactional(readOnly = true)
     public Page<ProductListView> inStockProducts(Long userId, int page, int size) {
-        // 1) 拿到用户的 productId 列表
+
         List<Long> ids = watchRepo.findByUser_UserId(userId)
                 .stream().map(w -> w.getProduct().getProductId()).toList();
         if (ids.isEmpty()) {
             return Page.empty(PageRequest.of(page, size));
         }
-        // 2) 过滤只看在库（用用户 catalog 查询 + name/ids 可扩展）
-        // 这里简化为分页在 service 端做（实际可写一个 in-stock by ids 的自定义 repo 方法）
+
         var all = productRepo.findAllById(ids).stream()
                 .filter(p -> p.getQuantity() != null && p.getQuantity() > 0)
                 .map(p -> (ProductListView) new ProductListView() {

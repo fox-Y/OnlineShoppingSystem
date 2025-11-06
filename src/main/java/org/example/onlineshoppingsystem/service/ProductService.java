@@ -42,7 +42,6 @@ public class ProductService {
                     p.getQuantity(), p.getRetailPrice(), p.getWholesalePrice()
             );
         } else {
-            // user: 不暴露库存/进价；若下架/缺货可根据要求抛出404
             if (p.getQuantity() <= 0) throw new IllegalArgumentException("Product not available");
             return ProductDetailRes.user(
                     p.getProductId(), p.getName(), p.getDescription(), p.getRetailPrice()

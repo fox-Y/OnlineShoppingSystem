@@ -37,7 +37,7 @@ public class JwtFilter extends OncePerRequestFilter {
                         List.of(new SimpleGrantedAuthority("ROLE_" + role))
                 );
                 SecurityContextHolder.getContext().setAuthentication(auth);
-            } catch (Exception ignored) { /* 无效/过期 → 继续匿名 */ }
+            } catch (Exception ignored) {}
         }
         chain.doFilter(req, res);
     }
