@@ -32,7 +32,7 @@ public class User {
     @Column(nullable = false)
     private Role role = Role.USER;
 
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     private Instant createdDate;
 
     @PrePersist
