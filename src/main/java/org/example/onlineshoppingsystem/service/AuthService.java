@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.example.onlineshoppingsystem.auth.JwtUtil;
 import org.example.onlineshoppingsystem.common.dto.LoginReq;
 import org.example.onlineshoppingsystem.common.dto.SignupReq;
+import org.example.onlineshoppingsystem.common.dto.TokenRes;
+import org.example.onlineshoppingsystem.common.exception.InvalidCredentialsException;
 import org.example.onlineshoppingsystem.dao.UserRepository;
 import org.example.onlineshoppingsystem.domain.entity.User;
 import org.example.onlineshoppingsystem.domain.enums.Role;
@@ -47,12 +49,14 @@ public class AuthService {
         userRepo.save(u);
     }
 
-    public String login(LoginReq req) {
+    public TokenRes login(LoginReq req) {
         var u = userRepo.findByUsername(req.getUsername())
-                .orElseThrow(() -> new IllegalArgumentException("Incorrect credentials"));
+                .orElseThrow(InvalidCredentialsException::new);
         if (!encoder.matches(req.getPassword(), u.getPassword())) {
-            throw new IllegalArgumentException("Incorrect credentials");
+            throw new InvalidCredentialsException();
         }
-        return jwt.generateToken(u.getUserId(), u.getUsername(), u.getRole().name());
+
+        String token = jwt.generateToken(u.getUserId(), u.getUsername(), u.getRole().name());
+        return new TokenRes(token, u.getUsername(), u.getRole().name());
     }
 }

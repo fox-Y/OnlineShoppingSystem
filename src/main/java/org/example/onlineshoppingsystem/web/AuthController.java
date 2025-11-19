@@ -24,7 +24,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public TokenRes login(@RequestBody LoginReq req) {
-        return new TokenRes(auth.login(req));
+        return auth.login(req);
     }
 
     @PostMapping("/admin/signup")

@@ -1,7 +1,7 @@
 package org.example.onlineshoppingsystem.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import jakarta.websocket.server.ServerEndpoint;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @ToString
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

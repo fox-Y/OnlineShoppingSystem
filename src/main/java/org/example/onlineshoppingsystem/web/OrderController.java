@@ -12,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import static org.example.onlineshoppingsystem.web.WebUtil.currentUserId;
+import static org.example.onlineshoppingsystem.web.WebUtil.isAdmin;
 
 @RestController
 @RequestMapping("/orders")
@@ -31,6 +32,10 @@ public class OrderController {
     public Page<Order> myOrders(@RequestParam(defaultValue = "0") int page,
                                 @RequestParam(defaultValue = "20") int size,
                                 Authentication auth) {
+        if (isAdmin(auth)) {
+            return orderService.allOrdersAdmin(page, size);
+        }
+
         return orderService.myOrders(currentUserId(auth), page, size);
     }
 
@@ -53,13 +58,5 @@ public class OrderController {
     public ResponseEntity<Void> complete(@PathVariable Long id) {
         orderService.complete(id);
         return ResponseEntity.ok().build();
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping(value = "/all", params = "admin=true")
-    public org.springframework.data.domain.Page<Order> allOrdersAdmin(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return orderService.allOrdersAdmin(page, size);
     }
 }

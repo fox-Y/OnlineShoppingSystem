@@ -11,4 +11,6 @@ import lombok.Setter;
 @Setter
 public class TokenRes {
     private String token;
+    private String username;
+    private String role;
 }

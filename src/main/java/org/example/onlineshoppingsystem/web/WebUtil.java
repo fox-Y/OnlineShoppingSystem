@@ -10,4 +10,17 @@ final class WebUtil {
         if (p instanceof JwtUser u) return u.getId();
         throw new IllegalStateException("No authenticated user");
     }
+
+    static boolean isAdmin(Authentication auth) {
+        if (auth == null || !auth.isAuthenticated()) {
+            return false;
+        }
+
+        var p = auth.getPrincipal();
+        if (p instanceof JwtUser u) {
+            return "ADMIN".equalsIgnoreCase(u.getRole());
+        }
+
+        return false;
+    }
 }

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 import static org.example.onlineshoppingsystem.web.WebUtil.currentUserId;
+import static org.example.onlineshoppingsystem.web.WebUtil.isAdmin;
 
 @RestController
 @RequestMapping("/products")
@@ -34,8 +35,17 @@ public class ProductController {
     }
 
     @GetMapping("/all")
-    public Page<ProductListView> all(@RequestParam(defaultValue = "0") int page,
-                                     @RequestParam(defaultValue = "20") int size) {
+    public Page<?> all(@RequestParam(defaultValue = "0") int page,
+                                     @RequestParam(defaultValue = "20") int size,
+                                     Authentication auth) {
+
+        System.out.println("In Get All Method");
+        if (isAdmin(auth)) {
+            System.out.println("Is Admin");
+            return productService.catalogForAdmin(page, size);
+        }
+
+        System.out.println("Not Admin");
         return productService.catalogForUser(page, size);
     }
 
@@ -80,12 +90,5 @@ public class ProductController {
     @GetMapping("/frequent/{n}")
     public List<PopularRes> frequent(@PathVariable int n, Authentication auth) {
         return statsService.frequentForUser(currentUserId(auth), n);
-    }
-
-    @GetMapping(value = "/all", params = "admin=true")
-    @PreAuthorize("hasRole('ADMIN')")
-    public Page<ProductAdminView> allAdmin(@RequestParam(defaultValue = "0") int page,
-                                           @RequestParam(defaultValue = "20") int size) {
-        return productService.catalogForAdmin(page, size);
     }
 }
