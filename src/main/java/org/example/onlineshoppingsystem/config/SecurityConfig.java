@@ -1,12 +1,16 @@
 package org.example.onlineshoppingsystem.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.onlineshoppingsystem.auth.JwtFilter;
+import org.example.onlineshoppingsystem.common.dto.ApiError;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -14,41 +18,68 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import java.time.Instant;
+
 @Configuration
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
+    private final ObjectMapper objectMapper;
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http
-                .csrf(csrf -> csrf.disable())                   // stateless API
-                .cors(cors -> cors.disable())                   // Postman doesn't need CORS
-                .httpBasic(basic -> basic.disable())
-                .formLogin(form -> form.disable())
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
+        http
+                .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Swagger / OpenAPI (if using springdoc)
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**",
-                                "/swagger-resources/**", "/webjars/**").permitAll()
-                        // Auth endpoints — method-aware matchers, no AntPathRequestMatcher needed
-                        .requestMatchers(HttpMethod.POST, "/signup", "/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/admin/signup").permitAll()
-                        // Public catalog
+                        .requestMatchers(HttpMethod.POST, "/login", "/signup", "/admin/signup").permitAll()
                         .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
-                        // Everything else requires JWT
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
+                // Custom JSON responses for 401 (unauthenticated) and 403 (forbidden)
+                .exceptionHandling(ex -> ex
+                        // Unauthenticated or invalid token: 401
+                        .authenticationEntryPoint((req, res, e) -> {
+                            ApiError body = new ApiError(
+                                    Instant.now(),
+                                    HttpServletResponse.SC_UNAUTHORIZED,
+                                    "UNAUTHORIZED",
+                                    "Authentication is required to access this resource.",
+                                    req.getRequestURI()
+                            );
+                            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            res.setContentType("application/json;charset=UTF-8");
+                            res.getWriter().write(objectMapper.writeValueAsString(body));
+                        })
+                        // Authenticated but not authorized: 403
+                        .accessDeniedHandler((req, res, e) -> {
+                            ApiError body = new ApiError(
+                                    Instant.now(),
+                                    HttpServletResponse.SC_FORBIDDEN,
+                                    "FORBIDDEN",
+                                    "You do not have permission to access this resource.",
+                                    req.getRequestURI()
+                            );
+                            res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            res.setContentType("application/json;charset=UTF-8");
+                            res.getWriter().write(objectMapper.writeValueAsString(body));
+                        })
+                )
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
     }
 
     @Bean
-    PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     @Bean
-    AuthenticationManager authenticationManager(AuthenticationConfiguration cfg) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration cfg) throws Exception {
         return cfg.getAuthenticationManager();
     }
 }

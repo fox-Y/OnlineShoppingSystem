@@ -52,6 +52,7 @@ public class AuthService {
     public TokenRes login(LoginReq req) {
         var u = userRepo.findByUsername(req.getUsername())
                 .orElseThrow(InvalidCredentialsException::new);
+
         if (!encoder.matches(req.getPassword(), u.getPassword())) {
             throw new InvalidCredentialsException();
         }

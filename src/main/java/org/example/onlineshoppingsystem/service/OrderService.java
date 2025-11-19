@@ -63,9 +63,22 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public Order detail(Long orderId) {
-        return orderRepo.findWithItemsByOrderId(orderId)
+    public Order detailForUserOrAdmin(Long orderId, Long currentUserId, boolean admin) {
+        var order = orderRepo.findWithItemsByOrderId(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+
+        // Admin can see any order
+        if (admin) {
+            return order;
+        }
+
+        // Normal user can only see own orders
+        if (order.getUser() == null || !order.getUser().getUserId().equals(currentUserId)) {
+            // Intentionally return "not found" to avoid leaking the existence of other users' orders
+            throw new IllegalArgumentException("Order not found");
+        }
+
+        return order;
     }
 
     @Transactional

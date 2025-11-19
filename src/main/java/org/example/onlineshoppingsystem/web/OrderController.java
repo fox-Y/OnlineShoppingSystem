@@ -41,8 +41,10 @@ public class OrderController {
 
     // GET /orders/{id}
     @GetMapping("/{id}")
-    public Order detail(@PathVariable Long id) {
-        return orderService.detail(id);
+    public Order detail(@PathVariable Long id, Authentication auth) {
+        Long userId = currentUserId(auth);
+        boolean admin = isAdmin(auth);
+        return orderService.detailForUserOrAdmin(id, userId, admin);
     }
 
     // PATCH /orders/{id}/cancel
