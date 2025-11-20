@@ -5,8 +5,6 @@ import org.example.onlineshoppingsystem.common.dto.IdRes;
 import org.example.onlineshoppingsystem.common.dto.PopularRes;
 import org.example.onlineshoppingsystem.common.dto.ProductDetailRes;
 import org.example.onlineshoppingsystem.common.dto.ProfitRes;
-import org.example.onlineshoppingsystem.dao.projection.ProductAdminView;
-import org.example.onlineshoppingsystem.dao.projection.ProductListView;
 import org.example.onlineshoppingsystem.domain.enums.Role;
 import org.example.onlineshoppingsystem.service.ProductService;
 import org.example.onlineshoppingsystem.service.StatsService;
@@ -39,13 +37,10 @@ public class ProductController {
                                      @RequestParam(defaultValue = "20") int size,
                                      Authentication auth) {
 
-        System.out.println("In Get All Method");
         if (isAdmin(auth)) {
-            System.out.println("Is Admin");
             return productService.catalogForAdmin(page, size);
         }
 
-        System.out.println("Not Admin");
         return productService.catalogForUser(page, size);
     }
 

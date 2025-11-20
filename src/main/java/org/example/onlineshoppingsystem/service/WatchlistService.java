@@ -1,6 +1,7 @@
 package org.example.onlineshoppingsystem.service;
 
 import org.example.onlineshoppingsystem.dao.ProductRepository;
+import org.example.onlineshoppingsystem.dao.UserRepository;
 import org.example.onlineshoppingsystem.dao.WatchlistRepository;
 import org.example.onlineshoppingsystem.dao.projection.ProductListView;
 import org.example.onlineshoppingsystem.domain.entity.Product;
@@ -20,17 +21,21 @@ public class WatchlistService {
 
     private final WatchlistRepository watchRepo;
     private final ProductRepository productRepo;
+    private final UserRepository userRepo;
 
-    public WatchlistService(WatchlistRepository watchRepo, ProductRepository productRepo) {
+    public WatchlistService(WatchlistRepository watchRepo, ProductRepository productRepo, UserRepository userRepo) {
         this.watchRepo = watchRepo;
         this.productRepo = productRepo;
+        this.userRepo = userRepo;
     }
 
     @Transactional(readOnly = true)
     public Page<ProductListView> inStockProducts(Long userId, int page, int size) {
 
-        List<Long> ids = watchRepo.findByUser_UserId(userId)
-                .stream().map(w -> w.getProduct().getProductId()).toList();
+        List<Long> ids = watchRepo.findByUser_UserId(userId).stream()
+                .map(w -> w.getProduct().getProductId())
+                .distinct()
+                .toList();
         if (ids.isEmpty()) {
             return Page.empty(PageRequest.of(page, size));
         }
@@ -52,10 +57,18 @@ public class WatchlistService {
 
     @Transactional
     public void add(Long userId, Long productId) {
-        if (watchRepo.existsByUser_UserIdAndProduct_ProductId(userId, productId)) return;
+        if (watchRepo.existsByUser_UserIdAndProduct_ProductId(userId, productId)) {
+            return;
+        }
+
+        var user = userRepo.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        var product = productRepo.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+
         var w = new Watchlist();
-        w.setUser(new User()); w.getUser().setUserId(userId);
-        w.setProduct(new Product()); w.getProduct().setProductId(productId);
+        w.setUser(user);
+        w.setProduct(product);
         watchRepo.save(w);
     }
 
